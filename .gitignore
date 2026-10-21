@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Node / front
+node_modules/
+dist/
+.quasar/
+coverage/
+npm-debug.log*
+*.log
+
+# Maven / Java
+target/
+
+# Base H2 en mode fichier (S2)
+*.mv.db
+*.trace.db
+
+# IntelliJ
+.idea/
+*.iml
+
+# Secrets
+.env
+.env.*
+!.env.example
