@@ -5,8 +5,22 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('@/pages/IndexPage.vue') },
-      { path: 'second', component: () => import('@/pages/SecondPage.vue') },
+      { path: '', redirect: { name: 'accounts' } },
+      {
+        path: 'accounts',
+        name: 'accounts',
+        component: () => import('@/pages/AccountsPage.vue'),
+      },
+      {
+        path: 'accounts/:accountId',
+        name: 'account-detail',
+        component: () => import('@/pages/AccountDetailPage.vue'),
+      },
+      {
+        path: 'transfer',
+        name: 'transfer',
+        component: () => import('@/pages/TransferPage.vue'),
+      },
     ],
   },
 
