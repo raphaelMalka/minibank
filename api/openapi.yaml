@@ -1,0 +1,239 @@
+openapi: 3.0.3
+
+info:
+  title: MiniBank API
+  description: |
+    API de MiniBank : consultation des comptes et des transactions, virements entre ses propres comptes.
+    Source unique de vérité : le serveur Spring Boot et le client TypeScript sont générés depuis ce fichier.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+    description: Développement local
+
+tags:
+  - name: Accounts
+    description: Comptes et transactions
+  - name: Transfers
+    description: Virements
+
+paths:
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: getAccounts
+      summary: Liste des comptes de l'utilisateur
+      responses:
+        '200':
+          description: Liste des comptes (éventuellement vide)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+  /accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Détail d'un compte
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Le compte demandé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /accounts/{accountId}/transactions:
+    get:
+      tags: [Accounts]
+      operationId: getAccountTransactions
+      summary: Historique des transactions d'un compte
+      description: Triées de la plus récente à la plus ancienne.
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Transactions du compte (éventuellement vide)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /transfers:
+    post:
+      tags: [Transfers]
+      operationId: createTransfer
+      summary: Virement entre deux comptes de l'utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: Virement exécuté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+components:
+  parameters:
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      description: Identifiant du compte
+      schema:
+        type: string
+      example: '1'
+
+  schemas:
+    Currency:
+      type: string
+      description: Code devise ISO 4217
+      enum: [EUR, CHF]
+
+    Amount:
+      type: object
+      description: Montant en chaîne décimale + devise (style Berlin Group), jamais en nombre flottant.
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{1,2})?$'
+          example: '2450.75'
+        currency:
+          $ref: '#/components/schemas/Currency'
+
+    Account:
+      type: object
+      required: [id, iban, label, balance]
+      properties:
+        id:
+          type: string
+          example: '1'
+        iban:
+          type: string
+          example: BE68539007547034
+        label:
+          type: string
+          example: Compte courant
+        balance:
+          $ref: '#/components/schemas/Amount'
+
+    TransactionType:
+      type: string
+      description: Sens du mouvement (le montant est toujours positif)
+      enum: [CREDIT, DEBIT]
+
+    Transaction:
+      type: object
+      required: [id, accountId, bookingDate, label, amount, type]
+      properties:
+        id:
+          type: string
+          example: t1
+        accountId:
+          type: string
+          example: '1'
+        bookingDate:
+          type: string
+          format: date
+          example: '2026-10-20'
+        label:
+          type: string
+          example: Salaire octobre
+        amount:
+          $ref: '#/components/schemas/Amount'
+        type:
+          $ref: '#/components/schemas/TransactionType'
+
+    TransferRequest:
+      type: object
+      description: Noms inspirés de Berlin Group / ISO 20022 (débiteur = compte qui paie, créancier = compte qui reçoit).
+      required: [debtorAccountId, creditorAccountId, instructedAmount, remittanceInformation]
+      properties:
+        debtorAccountId:
+          type: string
+          example: '1'
+        creditorAccountId:
+          type: string
+          example: '2'
+        instructedAmount:
+          $ref: '#/components/schemas/Amount'
+        remittanceInformation:
+          type: string
+          description: Communication libre (limite SEPA de 140 caractères)
+          minLength: 1
+          maxLength: 140
+          example: Épargne novembre
+
+    TransferResult:
+      type: object
+      required: [transferId, executionDate]
+      properties:
+        transferId:
+          type: string
+          example: tr7
+        executionDate:
+          type: string
+          format: date
+          example: '2026-11-05'
+
+    Problem:
+      type: object
+      description: Erreur au format RFC 9457 « Problem Details ».
+      properties:
+        type:
+          type: string
+          format: uri
+          example: about:blank
+        title:
+          type: string
+          example: Unprocessable Entity
+        status:
+          type: integer
+          example: 422
+        detail:
+          type: string
+          example: Solde insuffisant.
+        instance:
+          type: string
+          example: /api/transfers
+
+  responses:
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BadRequest:
+      description: Requête mal formée (JSON invalide, champ manquant, format incorrect)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableEntity:
+      description: Requête bien formée mais refusée par une règle métier (solde insuffisant, devises différentes, compte inconnu…)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

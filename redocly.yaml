@@ -1,0 +1,17 @@
+# Configuration du linter OpenAPI (npx @redocly/cli lint api/openapi.yaml)
+extends:
+  - recommended
+
+rules:
+  # À réactiver quand on ajoutera securitySchemes + security dans la spec.
+  security-defined: off
+
+  # Sans authentification, GET /accounts ne peut renvoyer aucune erreur 4xx.
+  # À réactiver avec le JWT (401 Unauthorized).
+  operation-4xx-response: off
+
+  # Le serveur local est le seul environnement du projet.
+  no-server-example.com: off
+
+  # Projet d'apprentissage privé, pas de licence publiée.
+  info-license: off
