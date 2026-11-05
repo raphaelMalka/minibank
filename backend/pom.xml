@@ -38,6 +38,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-h2console</artifactId>
         </dependency>
+        <!-- Swagger UI : documentation interactive de l'API -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.2.0</version>
+        </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -62,6 +68,21 @@
     </dependencies>
 
     <build>
+        <resources>
+            <!-- Ressources habituelles (application.properties...) -->
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <!-- La spec est copiée dans le jar, servie sur /api/openapi.yaml pour Swagger UI -->
+            <resource>
+                <directory>${project.basedir}/../api</directory>
+                <includes>
+                    <include>openapi.yaml</include>
+                </includes>
+                <targetPath>static</targetPath>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
