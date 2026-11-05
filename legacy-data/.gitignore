@@ -1,0 +1,4 @@
+# Dossiers de travail de la route Camel (les fichiers déposés dans inbox/ y sont déplacés)
+processed/
+error/
+inbox/*.txt

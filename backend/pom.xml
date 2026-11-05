@@ -21,10 +21,32 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
     </properties>
 
+    <!-- Versions de tous les modules Camel, alignées (Camel 4.22 LTS, construit sur Spring Boot 4.1) -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.camel.springboot</groupId>
+                <artifactId>camel-spring-boot-bom</artifactId>
+                <version>4.22.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- Camel : intégration de fichiers legacy (surveillance d'un dossier + parsing largeur fixe) -->
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-bindy-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

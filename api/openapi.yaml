@@ -90,6 +90,8 @@ paths:
                 $ref: '#/components/schemas/TransferResult'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
 
@@ -227,6 +229,12 @@ components:
             $ref: '#/components/schemas/Problem'
     BadRequest:
       description: Requête mal formée (JSON invalide, champ manquant, format incorrect)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Un des comptes a été modifié en même temps par une autre opération ; la requête peut être relancée
       content:
         application/problem+json:
           schema:
