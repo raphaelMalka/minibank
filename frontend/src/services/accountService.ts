@@ -1,8 +1,13 @@
 import type { Account, Transaction } from '@/models/account';
 import type { TransferRequest, TransferResult } from '@/models/transfer';
+import { AMOUNT_PATTERN, fromCents, toCents } from '@/utils/money';
 
 // Simule la latence d'un appel réseau
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Comme une vraie API (qui renvoie du JSON neuf à chaque appel), on renvoie des copies :
+// la page ne peut pas modifier les données « serveur » par accident.
+const copy = <T>(value: T): T => structuredClone(value);
 
 const accounts: Account[] = [
   {
@@ -78,35 +83,23 @@ const transactions: Transaction[] = [
 
 export async function getAccounts(): Promise<Account[]> {
   await delay(300);
-  return accounts;
+  return copy(accounts);
 }
 
 export async function getAccount(id: string): Promise<Account | undefined> {
   await delay(300);
-  return accounts.find((account) => account.id === id);
+  const account = accounts.find((account) => account.id === id);
+  return account && copy(account);
 }
 
 export async function getTransactions(accountId: string): Promise<Transaction[]> {
   await delay(300);
-  return transactions
+  return copy(transactions)
     .filter((tx) => tx.accountId === accountId)
     .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 }
 
 // --- Virements ---------------------------------------------------------------
-
-// Calculs d'argent en centimes entiers (bigint), jamais en number : 0.1 + 0.2 !== 0.3
-const AMOUNT_PATTERN = /^\d+(\.\d{1,2})?$/;
-
-function toCents(amount: string): bigint {
-  const [integerPart = '0', decimalPart = ''] = amount.split('.');
-  return BigInt(integerPart) * 100n + BigInt(decimalPart.padEnd(2, '0'));
-}
-
-function fromCents(cents: bigint): string {
-  const decimals = (cents % 100n).toString().padStart(2, '0');
-  return `${cents / 100n}.${decimals}`;
-}
 
 let nextTransactionId = transactions.length + 1;
 
